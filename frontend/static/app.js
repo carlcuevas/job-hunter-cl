@@ -270,7 +270,7 @@ async function runScraper() {
 
   try {
     await post("/api/scraper/run", {
-      portals: ["laborum", "getonboard"],
+      portals: ["getonboard"],
       limit: 50,
     });
     pollScrapeStatus();
