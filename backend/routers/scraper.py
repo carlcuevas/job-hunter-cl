@@ -57,8 +57,16 @@ async def _do_scrape(request: ScrapeRequest):
             elif isinstance(result, Exception):
                 print(f"[Scraper] Error en portal: {result}")
 
+        # Deduplicar ofertas repetidas entre portales
+        from dedup import deduplicate, dedup_stats
+        before = len(all_jobs)
+        all_jobs = deduplicate(all_jobs)
+        after = len(all_jobs)
+        print(f"[Scraper] Dedup: {before} → {after} ({before - after} duplicados)")
+
         db.save_jobs_bulk(all_jobs)
         _scraping_status["last_count"] = len(all_jobs)
+        _scraping_status["dedup"] = dedup_stats(before, after)
 
         from datetime import datetime
         _scraping_status["last_run"] = datetime.utcnow().isoformat()

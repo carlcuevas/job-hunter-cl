@@ -119,12 +119,27 @@ function renderJobs(jobs) {
   container.innerHTML = jobs.map(jobCard).join("");
 }
 
+function sourceInfo(source) {
+  const map = {
+    laborum:       { cls: "source-lab", name: "Laborum" },
+    chiletrabajos: { cls: "source-ct",  name: "ChileTrabajos" },
+    computrabajo:  { cls: "source-cot", name: "Computrabajo" },
+    getonboard:    { cls: "source-gob", name: "Get on Board" },
+  };
+  return map[source] || { cls: "source-gob", name: source || "Portal" };
+}
+
 function jobCard(job) {
   const scoreColor = getScoreColor(job.match_score);
   const statusClass = { nueva: "", guardada: "saved", postulada: "applied", descartada: "discarded" }[job.status] || "";
-  const sourceClass = job.source === "laborum" ? "source-lab" : job.source === "chiletrabajos" ? "source-ct" : job.source === "computrabajo" ? "source-cot" : "source-gob";
-  const sourceName = job.source === "laborum" ? "Laborum" : job.source === "chiletrabajos" ? "ChileTrabajos" : job.source === "computrabajo" ? "Computrabajo" : "Get on Board";
+  const src = sourceInfo(job.source);
   const tags = (job.match_tags || []).slice(0, 4).map(t => `<span class="match-tag">${t}</span>`).join("");
+
+  // badge "también en" otros portales
+  const alsoIn = (job.also_in || []).filter(Boolean);
+  const alsoBadge = alsoIn.length
+    ? `<span class="tag also-in" title="Esta oferta también aparece en otros portales">🔗 también en ${alsoIn.map(s => sourceInfo(s).name).join(", ")}</span>`
+    : "";
 
   return `
   <div class="job-card ${statusClass}" onclick="openJobModal('${job.id}')">
@@ -134,9 +149,10 @@ function jobCard(job) {
     </div>
     <div class="job-company">🏢 ${esc(job.company)}</div>
     <div class="job-meta">
-      <span class="tag ${sourceClass}">${sourceName}</span>
+      <span class="tag ${src.cls}">${src.name}</span>
       ${job.modality ? `<span class="tag modality">${esc(job.modality)}</span>` : ""}
       ${job.location ? `<span class="tag">📍 ${esc(job.location)}</span>` : ""}
+      ${alsoBadge}
     </div>
     <div class="job-description">${esc(job.description)}</div>
     <div class="job-tags">${tags}</div>
@@ -188,17 +204,21 @@ async function openJobModal(jobId) {
 function renderJobModal(job) {
   const scoreColor = getScoreColor(job.match_score);
   const tags = (job.match_tags || []).map(t => `<span class="match-tag">${esc(t)}</span>`).join("");
-  const sourceClass = job.source === "laborum" ? "source-lab" : job.source === "chiletrabajos" ? "source-ct" : job.source === "computrabajo" ? "source-cot" : "source-gob";
-  const sourceName = job.source === "laborum" ? "Laborum" : job.source === "chiletrabajos" ? "ChileTrabajos" : job.source === "computrabajo" ? "Computrabajo" : "Get on Board";
+  const src = sourceInfo(job.source);
+  const alsoIn = (job.also_in || []).filter(Boolean);
+  const alsoBadge = alsoIn.length
+    ? `<span class="tag also-in">🔗 también en ${alsoIn.map(s => sourceInfo(s).name).join(", ")}</span>`
+    : "";
 
   return `
     <div class="modal-title">${esc(job.title)}</div>
     <div class="modal-company">🏢 ${esc(job.company)}</div>
     <div class="modal-meta">
-      <span class="tag ${sourceClass}">${sourceName}</span>
+      <span class="tag ${src.cls}">${src.name}</span>
       ${job.modality ? `<span class="tag modality">${esc(job.modality)}</span>` : ""}
       ${job.location ? `<span class="tag">📍 ${esc(job.location)}</span>` : ""}
       ${job.salary ? `<span class="tag" style="color:var(--green);border-color:var(--green)">💰 ${esc(job.salary)}</span>` : ""}
+      ${alsoBadge}
     </div>
 
     <div class="modal-score-bar">
@@ -339,9 +359,11 @@ async function checkScrapeStatus() {
 
       if (status.last_run) {
         const count = status.last_count || 0;
+        const dups = status.dedup?.duplicates_removed || 0;
+        const dupTxt = dups > 0 ? ` · ${dups} duplicada${dups !== 1 ? "s" : ""} filtrada${dups !== 1 ? "s" : ""}` : "";
         document.getElementById("last-scrape-info").textContent =
-          `Última búsqueda: ${count} oferta${count !== 1 ? "s" : ""} encontrada${count !== 1 ? "s" : ""}`;
-        showToast(`✅ ${count} ofertas encontradas`, "success");
+          `Última búsqueda: ${count} oferta${count !== 1 ? "s" : ""} única${count !== 1 ? "s" : ""}${dupTxt}`;
+        showToast(`✅ ${count} ofertas encontradas${dupTxt}`, "success");
         loadStats();
         loadTopJobs();
         loadJobs();
@@ -380,7 +402,7 @@ function appCard(app) {
       <div class="app-title">${esc(app.job_title)}</div>
       <div class="app-company">🏢 ${esc(app.company)}</div>
       <div class="app-date">
-        ${app.source === "laborum" ? "Laborum" : app.source === "chiletrabajos" ? "ChileTrabajos" : app.source === "computrabajo" ? "Computrabajo" : "Get on Board"} · Postulada el ${date}
+        ${sourceInfo(app.source).name} · Postulada el ${date}
       </div>
     </div>
     <div>

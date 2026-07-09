@@ -30,17 +30,25 @@ HEADERS = {
 # Términos de búsqueda alineados al perfil de Carlos.
 # Computrabajo usa URLs tipo /trabajo-de-{termino-con-guiones}
 SEARCH_TERMS = [
+    # Cafetería / servicio (experiencia principal de Carlos)
     "barista",
     "garzon",
+    "cafeteria",
     "atencion-al-cliente",
+    "encargado-de-local",
+    "cajero",
+    # Soporte TI / tecnología (formación actual)
     "soporte-tecnico",
     "help-desk",
     "mesa-de-ayuda",
     "tecnico-en-computacion",
+    "soporte-ti",
+    "tecnico-de-soporte",
+    # Administración / RRHH (título técnico)
     "asistente-administrativo",
-    "cafeteria",
-    "call-center",
     "recursos-humanos",
+    "call-center",
+    "ejecutivo-de-atencion",
 ]
 
 
@@ -54,9 +62,9 @@ async def scrape(limit: int = 60, keywords: List[str] = None) -> List[Dict]:
         headers=HEADERS,
         follow_redirects=True,
     ) as client:
-        for term in terms[:8]:  # hasta 8 búsquedas por corrida
+        for term in terms[:12]:  # hasta 12 términos por corrida
             try:
-                results = await _search_term(client, term)
+                results = await _search_term(client, term, pages=2)
                 for job in results:
                     if job["id"] not in jobs:
                         jobs[job["id"]] = job
@@ -68,25 +76,30 @@ async def scrape(limit: int = 60, keywords: List[str] = None) -> List[Dict]:
     return list(jobs.values())[:limit]
 
 
-async def _search_term(client: httpx.AsyncClient, term: str) -> List[Dict]:
-    """Busca ofertas para un término dado."""
+async def _search_term(client: httpx.AsyncClient, term: str, pages: int = 2) -> List[Dict]:
+    """Busca ofertas para un término dado, recorriendo varias páginas."""
     from bs4 import BeautifulSoup
 
-    url = f"{CT_BASE}/trabajo-de-{term}"
     results = []
+    for page in range(1, pages + 1):
+        url = f"{CT_BASE}/trabajo-de-{term}" + (f"?p={page}" if page > 1 else "")
+        try:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                break
 
-    resp = await client.get(url)
-    if resp.status_code != 200:
-        print(f"[Computrabajo] HTTP {resp.status_code} para {url}")
-        return []
+            soup = BeautifulSoup(resp.text, "html.parser")
+            articles = soup.select("article.box_offer")
+            if not articles:
+                break
 
-    soup = BeautifulSoup(resp.text, "html.parser")
-    articles = soup.select("article.box_offer")
-
-    for art in articles:
-        job = _parse_article(art)
-        if job:
-            results.append(job)
+            for art in articles:
+                job = _parse_article(art)
+                if job:
+                    results.append(job)
+        except Exception as e:
+            print(f"[Computrabajo] Error página {page} de '{term}': {e}")
+            break
 
     return results
 

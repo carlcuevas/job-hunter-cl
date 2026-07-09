@@ -39,33 +39,129 @@ SEARCH_SLUGS = [
 
 
 async def scrape(limit: int = 50, keywords: List[str] = None) -> List[Dict]:
-    """Scrape ofertas de Chiletrabajos."""
+    """
+    Scrape ofertas reales de Chiletrabajos.
+    Nota: el sitio muestra ~8 ofertas destacadas/recientes sin importar
+    el término (el slug no filtra) ni la página. Se scrapean esas ofertas
+    reales una vez; el scorer las rankea según el perfil de Carlos.
+    """
     jobs = {}
-
-    slugs = _keywords_to_slugs(keywords) if keywords else SEARCH_SLUGS
 
     async with httpx.AsyncClient(
         timeout=25,
         headers=HEADERS,
         follow_redirects=True,
     ) as client:
-        for slug in slugs[:6]:
+        # Un par de slugs distintos por si rotan ofertas destacadas
+        for slug in ["barista-en-santiago", "soporte-ti", "atencion-al-cliente"]:
             try:
-                results = await _scrape_slug(client, slug)
+                results = await _scrape_real(client, slug)
                 for job in results:
                     if job["id"] not in jobs:
                         jobs[job["id"]] = job
-                if len(jobs) >= limit:
-                    break
             except Exception as e:
                 print(f"[ChileTrabajos] Error en '{slug}': {e}")
 
-    # Si no se obtuvieron resultados reales, usar mocks
+    # Fallback a mocks solo si no se obtuvo NADA real
     if not jobs:
+        print("[ChileTrabajos] Sin resultados reales, usando fallback")
         for mock in _get_mock_jobs():
             jobs[mock["id"]] = mock
 
     return list(jobs.values())[:limit]
+
+
+async def _scrape_real(client: httpx.AsyncClient, slug: str) -> List[Dict]:
+    """Parsea ofertas reales agrupando enlaces /trabajo/ por URL."""
+    from bs4 import BeautifulSoup
+
+    url = f"{CHILE_BASE}/trabajos/{slug}"
+    resp = await client.get(url)
+    if resp.status_code != 200:
+        return []
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    results = []
+    seen = {}
+
+    # Agrupar todos los enlaces que apuntan a la misma oferta
+    for a in soup.find_all("a", href=re.compile(r"/trabajo/")):
+        href = a.get("href", "").split("#")[0]
+        if not href:
+            continue
+        txt = a.get_text(strip=True)
+        seen.setdefault(href, {"texts": [], "link": a})
+        if txt:
+            seen[href]["texts"].append(txt)
+
+    for href, data in seen.items():
+        job = _parse_grouped(href, data, soup)
+        if job:
+            results.append(job)
+
+    return results
+
+
+def _parse_grouped(href: str, data: dict, soup) -> Optional[Dict]:
+    """Construye una oferta a partir de los textos agrupados de sus enlaces."""
+    try:
+        texts = data["texts"]
+        # Título = texto más largo que no sea fecha ni "ver más"
+        candidates = [
+            t for t in texts
+            if t and "ver m" not in t.lower()
+            and not re.match(r"\d{1,2}\s+de\s+", t.lower())
+        ]
+        if not candidates:
+            return None
+        title = max(candidates, key=len)
+        if len(title) < 4:
+            return None
+
+        url = CHILE_BASE + href if href.startswith("/") else href
+
+        # Extraer empresa y ubicación del contenedor padre
+        company = "Empresa en Chiletrabajos"
+        location = "Chile"
+        posted_at = None
+
+        link = data.get("link")
+        parent = link.find_parent(["div", "article", "li"]) if link else None
+        if parent:
+            ctx = re.sub(r"\s+", " ", parent.get_text(" ", strip=True))
+            # patrón: "... TÍTULO EMPRESA, DD de Mes de AAAA"
+            m = re.search(re.escape(title) + r"\s+(.+?),\s*(\d{1,2}\s+de\s+\w+\s+de\s+\d{4})", ctx)
+            if m:
+                company = m.group(1).strip()[:60] or company
+                posted_at = m.group(2).strip()
+            # ubicación si aparece
+            loc_m = re.search(r"(Santiago|Providencia|Las Condes|Maipú|Viña del Mar|Valparaíso|Concepción|Región\s+\w+)", ctx)
+            if loc_m:
+                location = loc_m.group(1)
+
+        job_id = "ct_" + hashlib.md5(url.encode()).hexdigest()[:12]
+        score, tags = score_job(title, title, location)
+
+        return {
+            "id": job_id,
+            "title": title,
+            "company": company,
+            "location": location,
+            "modality": None,
+            "salary": None,
+            "description": title,
+            "url": url,
+            "source": "chiletrabajos",
+            "posted_at": posted_at,
+            "scraped_at": datetime.utcnow().isoformat(),
+            "match_score": score,
+            "match_tags": tags,
+            "status": "nueva",
+            "cover_letter": None,
+        }
+    except Exception as e:
+        print(f"[ChileTrabajos] Error _parse_grouped: {e}")
+        return None
 
 
 async def _scrape_slug(client: httpx.AsyncClient, slug: str) -> List[Dict]:
