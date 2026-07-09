@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Hunter CL — Carlos Cuevas</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">🎯 Job Hunter CL</div>
+      <div class="user-info">
+        <div class="user-avatar">CC</div>
+        <div>
+          <div class="user-name">Carlos Cuevas</div>
+          <div class="user-role">Soporte TI · CS · Barista</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a class="nav-item" data-page="jobs" onclick="showPage('jobs')">
+        <span class="nav-icon">💼</span> Ofertas
+        <span class="badge" id="badge-new">0</span>
+      </a>
+      <a class="nav-item" data-page="applications" onclick="showPage('applications')">
+        <span class="nav-icon">📋</span> Postulaciones
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-scrape" id="btn-scrape" onclick="runScraper()">
+        <span id="scrape-icon">🔍</span>
+        <span id="scrape-text">Buscar Ofertas</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ── DASHBOARD ─────────────────────────────────────────── -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p class="subtitle" id="last-scrape-info">Buscá ofertas para empezar 👆</p>
+      </div>
+
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="stat-total">0</div>
+          <div class="stat-label">Ofertas totales</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-number" id="stat-new">0</div>
+          <div class="stat-label">Nuevas hoy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-applied">0</div>
+          <div class="stat-label">Postuladas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-interviews">0</div>
+          <div class="stat-label">Entrevistas</div>
+        </div>
+      </div>
+
+      <div class="section-title">🔥 Top Matches</div>
+      <div id="top-jobs-list" class="jobs-grid"></div>
+    </div>
+
+    <!-- ── OFERTAS ────────────────────────────────────────────── -->
+    <div id="page-jobs" class="page">
+      <div class="page-header">
+        <h1>Ofertas de Trabajo</h1>
+        <div class="filters">
+          <input type="text" id="search-input" placeholder="🔍 Buscar título, empresa..." oninput="filterJobs()" />
+          <select id="filter-source" onchange="filterJobs()">
+            <option value="">Todos los portales</option>
+            <option value="laborum">Laborum</option>
+            <option value="getonboard">Get on Board</option>
+          </select>
+          <select id="filter-status" onchange="filterJobs()">
+            <option value="">Todos los estados</option>
+            <option value="nueva">Nuevas</option>
+            <option value="guardada">Guardadas</option>
+            <option value="postulada">Postuladas</option>
+            <option value="descartada">Descartadas</option>
+          </select>
+          <select id="filter-score" onchange="filterJobs()">
+            <option value="0">Cualquier match</option>
+            <option value="50">Match ≥ 50%</option>
+            <option value="70">Match ≥ 70%</option>
+          </select>
+        </div>
+      </div>
+      <div id="jobs-count" class="jobs-count"></div>
+      <div id="jobs-list" class="jobs-grid"></div>
+    </div>
+
+    <!-- ── POSTULACIONES ──────────────────────────────────────── -->
+    <div id="page-applications" class="page">
+      <div class="page-header">
+        <h1>Mis Postulaciones</h1>
+      </div>
+      <div id="applications-list" class="applications-list"></div>
+    </div>
+
+  </main>
+
+  <!-- ── MODAL OFERTA ──────────────────────────────────────────── -->
+  <div id="job-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="closeJobModal()">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
