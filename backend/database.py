@@ -79,12 +79,14 @@ def update_job_status(job_id: str, status: str) -> bool:
     return True
 
 
-def update_job_cover_letter(job_id: str, cover_letter: str) -> bool:
+def update_job_cover_letter(job_id: str, cover_letter: str, gob_experience: str = "", gob_education: str = "") -> bool:
     _ensure_db()
     data = _read(JOBS_FILE)
     if job_id not in data:
         return False
-    data[job_id]["cover_letter"] = cover_letter
+    data[job_id]["cover_letter"]   = cover_letter
+    data[job_id]["gob_experience"] = gob_experience
+    data[job_id]["gob_education"]  = gob_education
     _write(JOBS_FILE, data)
     return True
 

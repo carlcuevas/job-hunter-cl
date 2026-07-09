@@ -57,8 +57,10 @@ async def update_status(job_id: str, payload: dict):
 
 @router.patch("/{job_id}/cover-letter")
 async def update_cover_letter(job_id: str, payload: dict):
-    cover_letter = payload.get("cover_letter", "")
-    ok = db.update_job_cover_letter(job_id, cover_letter)
+    cover_letter   = payload.get("cover_letter", "")
+    gob_experience = payload.get("gob_experience", "")
+    gob_education  = payload.get("gob_education", "")
+    ok = db.update_job_cover_letter(job_id, cover_letter, gob_experience, gob_education)
     if not ok:
         raise HTTPException(status_code=404, detail="Oferta no encontrada")
     return {"message": "Carta actualizada"}
@@ -75,7 +77,41 @@ async def generate_cover_letter(job_id: str):
         job_title=job.get("title", "el cargo"),
         company=job.get("company", "su empresa"),
     )
-    return {"cover_letter": letter}
+
+    # Detectar área del trabajo para seleccionar template de experiencia
+    experience_text = _pick_experience_template(job)
+    education_text  = PROFILE["gob_education_template"]
+
+    return {
+        "cover_letter": letter,
+        "gob_experience": experience_text,
+        "gob_education": education_text,
+    }
+
+
+def _pick_experience_template(job: dict) -> str:
+    """Selecciona el template de experiencia según las keywords del trabajo."""
+    text = (job.get("title", "") + " " + job.get("description", "")).lower()
+
+    ti_keywords = ["soporte", "helpdesk", "help desk", "it ", "ti ", "infraestructura",
+                   "técnico", "aws", "cloud", "redes", "hardware", "software", "sistemas"]
+    rrhh_keywords = ["rrhh", "recursos humanos", "administración de personal",
+                     "remuneraciones", "gestión de personas", "sap"]
+    cs_keywords = ["atención al cliente", "customer", "ventas", "servicio al cliente",
+                   "call center", "soporte cliente", "barista", "cafetería"]
+
+    ti_score   = sum(1 for k in ti_keywords   if k in text)
+    rrhh_score = sum(1 for k in rrhh_keywords if k in text)
+    cs_score   = sum(1 for k in cs_keywords   if k in text)
+
+    best = max(ti_score, rrhh_score, cs_score)
+    if best == 0:
+        return PROFILE["gob_experience_templates"]["default"]
+    if best == ti_score:
+        return PROFILE["gob_experience_templates"]["ti"]
+    if best == rrhh_score:
+        return PROFILE["gob_experience_templates"]["rrhh"]
+    return PROFILE["gob_experience_templates"]["atencion_cliente"]
 
 
 @router.delete("/{job_id}")

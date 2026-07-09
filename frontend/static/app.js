@@ -156,14 +156,23 @@ async function openJobModal(jobId) {
     const job = await get(`/api/jobs/${jobId}`);
     content.innerHTML = renderJobModal(job);
 
-    // Cargar carta de presentación
+    // Cargar carta de presentación y campos Get on Board
     if (job.cover_letter) {
       document.getElementById("cover-letter-text").value = job.cover_letter;
     } else {
-      const { cover_letter } = await get(`/api/jobs/${jobId}/cover-letter/generate`);
-      document.getElementById("cover-letter-text").value = cover_letter;
-      await patch(`/api/jobs/${jobId}/cover-letter`, { cover_letter });
+      const res = await get(`/api/jobs/${jobId}/cover-letter/generate`);
+      document.getElementById("cover-letter-text").value = res.cover_letter;
+      document.getElementById("gob-experience-text").value = res.gob_experience;
+      document.getElementById("gob-education-text").value  = res.gob_education;
+      await patch(`/api/jobs/${jobId}/cover-letter`, {
+        cover_letter:   res.cover_letter,
+        gob_experience: res.gob_experience,
+        gob_education:  res.gob_education,
+      });
     }
+    // Si ya tenía cover_letter guardada, cargar también los campos gob
+    if (job.gob_experience) document.getElementById("gob-experience-text").value = job.gob_experience;
+    if (job.gob_education)  document.getElementById("gob-education-text").value  = job.gob_education;
   } catch (e) {
     content.innerHTML = `<p style="color:var(--red)">Error cargando oferta</p>`;
   }
@@ -199,7 +208,24 @@ function renderJobModal(job) {
     <div class="modal-description">${esc(job.description)}</div>
 
     <div class="cover-letter-section">
-      <label>✉️ Carta de Presentación <small style="color:var(--text2);font-weight:400">(editable)</small></label>
+      <div class="gob-fields-title">✉️ Campos para postular en Get on Board</div>
+
+      <label class="field-label">
+        📋 Experiencia y perfil profesional
+        <small>(copia y pega esto en Get on Board)</small>
+      </label>
+      <textarea id="gob-experience-text" onchange="saveCoverLetter('${job.id}')"></textarea>
+
+      <label class="field-label" style="margin-top:16px">
+        🎓 Formación académica y estudios
+        <small>(copia y pega esto en Get on Board)</small>
+      </label>
+      <textarea id="gob-education-text" onchange="saveCoverLetter('${job.id}')" style="min-height:140px"></textarea>
+
+      <label class="field-label" style="margin-top:16px">
+        📝 Carta de presentación completa
+        <small>(opcional, si el portal la pide)</small>
+      </label>
       <textarea id="cover-letter-text" onchange="saveCoverLetter('${job.id}')"></textarea>
     </div>
 
@@ -253,8 +279,10 @@ async function discardJob(jobId) {
 }
 
 async function saveCoverLetter(jobId) {
-  const text = document.getElementById("cover-letter-text")?.value || "";
-  await patch(`/api/jobs/${jobId}/cover-letter`, { cover_letter: text });
+  const cover_letter   = document.getElementById("cover-letter-text")?.value || "";
+  const gob_experience = document.getElementById("gob-experience-text")?.value || "";
+  const gob_education  = document.getElementById("gob-education-text")?.value  || "";
+  await patch(`/api/jobs/${jobId}/cover-letter`, { cover_letter, gob_experience, gob_education });
 }
 
 // ── Scraper ─────────────────────────────────────────────────────
