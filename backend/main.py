@@ -1,8 +1,12 @@
 import sys
 import os
 
-# Asegurar que backend/ esté en sys.path para imports relativos
+# Cuando se ejecuta como "cd backend && uvicorn main:app",
+# el cwd es backend/ y el frontend está en ../frontend
 _backend_dir = os.path.dirname(os.path.abspath(__file__))
+_root_dir    = os.path.abspath(os.path.join(_backend_dir, ".."))
+
+# Asegurar que backend/ esté en sys.path para imports relativos
 if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 
@@ -27,9 +31,8 @@ app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
 app.include_router(applications.router, prefix="/api/applications", tags=["applications"])
 app.include_router(scraper.router, prefix="/api/scraper", tags=["scraper"])
 
-# Rutas al frontend — funciona tanto local como en Render
-_root_dir = os.path.join(_backend_dir, "..")
-frontend_path = os.path.abspath(os.path.join(_root_dir, "frontend"))
+# Frontend — siempre relativo a la raíz del repo
+frontend_path = os.path.join(_root_dir, "frontend")
 
 app.mount("/static", StaticFiles(directory=os.path.join(frontend_path, "static")), name="static")
 
