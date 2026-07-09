@@ -32,6 +32,10 @@
       <a class="nav-item" data-page="applications" onclick="showPage('applications')">
         <span class="nav-icon">📋</span> Postulaciones
       </a>
+      <a class="nav-item" data-page="auto" onclick="showPage('auto')">
+        <span class="nav-icon">⏰</span> Búsqueda Auto
+        <span class="badge badge-auto" id="badge-auto" style="display:none">ON</span>
+      </a>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-scrape" id="btn-scrape" onclick="runScraper()">
@@ -119,6 +123,80 @@
         <h1>Mis Postulaciones</h1>
       </div>
       <div id="applications-list" class="applications-list"></div>
+    </div>
+
+    <!-- ── BÚSQUEDA AUTOMÁTICA ────────────────────────────────── -->
+    <div id="page-auto" class="page">
+      <div class="page-header">
+        <h1>Búsqueda Automática</h1>
+        <p class="subtitle">Programa la app para que busque ofertas sola, todos los días.</p>
+      </div>
+
+      <div class="auto-card">
+        <div class="auto-toggle-row">
+          <div>
+            <div class="auto-toggle-title">Activar búsqueda automática</div>
+            <div class="auto-toggle-desc">Se ejecutará todos los días a la hora que elijas (hora de Chile).</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="auto-enabled" onchange="saveSchedule()" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="auto-settings" id="auto-settings">
+          <div class="auto-field">
+            <label>🕐 Hora de búsqueda diaria</label>
+            <div class="time-inputs">
+              <select id="auto-hour" onchange="saveSchedule()"></select>
+              <span>:</span>
+              <select id="auto-minute" onchange="saveSchedule()"></select>
+              <span class="tz-note">hora de Santiago</span>
+            </div>
+          </div>
+
+          <div class="auto-field">
+            <label>🌐 Portales a buscar</label>
+            <div class="portal-checks">
+              <label class="portal-check"><input type="checkbox" id="p-computrabajo" value="computrabajo" onchange="saveSchedule()" checked /> Computrabajo</label>
+              <label class="portal-check"><input type="checkbox" id="p-getonboard" value="getonboard" onchange="saveSchedule()" checked /> Get on Board</label>
+              <label class="portal-check"><input type="checkbox" id="p-chiletrabajos" value="chiletrabajos" onchange="saveSchedule()" checked /> ChileTrabajos</label>
+            </div>
+          </div>
+
+          <div class="auto-status" id="auto-status">
+            <div class="auto-status-row">
+              <span>⏭️ Próxima búsqueda:</span>
+              <strong id="next-run">—</strong>
+            </div>
+            <div class="auto-status-row">
+              <span>✅ Última búsqueda auto:</span>
+              <strong id="last-auto-run">Nunca</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auto-card info-card">
+        <div class="info-title">💡 Importante para que funcione 24/7</div>
+        <p class="info-text">
+          El plan gratuito de Render <strong>pausa el servidor</strong> tras 15 min sin visitas,
+          por lo que el temporizador interno se detiene mientras duerme. Para garantizar que la
+          búsqueda corra <strong>todos los días sí o sí</strong>, configura un cron externo gratuito:
+        </p>
+        <ol class="info-steps">
+          <li>Entra a <a href="https://cron-job.org" target="_blank" rel="noopener">cron-job.org</a> (gratis) y crea una cuenta.</li>
+          <li>Crea un nuevo cronjob que llame a esta URL con método <strong>POST</strong>:</li>
+        </ol>
+        <div class="cron-url">
+          <code id="cron-url-text">https://job-hunter-cl.onrender.com/api/scraper/cron</code>
+          <button class="btn-copy" onclick="copyCronUrl()">📋 Copiar</button>
+        </div>
+        <p class="info-text">
+          Programa el cron a la misma hora que elegiste arriba. Ese llamado despierta el servidor
+          y ejecuta la búsqueda automáticamente. ✨
+        </p>
+      </div>
     </div>
 
   </main>

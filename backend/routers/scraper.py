@@ -2,10 +2,15 @@ from fastapi import APIRouter, BackgroundTasks
 from models import ScrapeRequest
 import database as db
 import asyncio
+from datetime import datetime
 
 router = APIRouter()
 
 _scraping_status = {"running": False, "last_run": None, "last_count": 0, "error": None}
+
+
+def get_status_dict():
+    return _scraping_status
 
 
 @router.post("/run")
@@ -23,7 +28,56 @@ async def get_status():
     return _scraping_status
 
 
-async def _do_scrape(request: ScrapeRequest):
+# ── Configuración de búsqueda automática ───────────────────────────────────────
+
+@router.get("/schedule")
+async def get_schedule():
+    """Devuelve la configuración actual de búsqueda automática."""
+    settings = db.get_settings()
+    next_run = None
+    try:
+        from scheduler import get_next_run
+        next_run = get_next_run()
+    except Exception:
+        pass
+    return {**settings, "next_run": next_run}
+
+
+@router.post("/schedule")
+async def update_schedule(payload: dict):
+    """Actualiza la configuración de búsqueda automática y reprograma el job."""
+    settings = db.update_settings(payload)
+    # Reprogramar el scheduler con la nueva config
+    try:
+        from scheduler import reschedule
+        reschedule()
+    except Exception as e:
+        print(f"[Scheduler] No se pudo reprogramar: {e}")
+    return {"message": "Configuración actualizada", "settings": settings}
+
+
+@router.post("/cron")
+async def cron_trigger(background_tasks: BackgroundTasks):
+    """
+    Endpoint para disparar la búsqueda desde un cron EXTERNO (ej: cron-job.org).
+    Útil en Render free: el request 'despierta' el servicio y ejecuta el scrape.
+    Solo corre si la búsqueda automática está habilitada.
+    """
+    settings = db.get_settings()
+    if not settings.get("auto_search_enabled"):
+        return {"message": "Búsqueda automática deshabilitada", "ran": False}
+    if _scraping_status["running"]:
+        return {"message": "Ya hay un scrape en curso", "ran": False}
+
+    req = ScrapeRequest(
+        portals=settings.get("portals", ["computrabajo", "getonboard", "chiletrabajos"]),
+        limit=settings.get("limit", 60),
+    )
+    background_tasks.add_task(_do_scrape, req, True)
+    return {"message": "Búsqueda automática iniciada", "ran": True, "portals": req.portals}
+
+
+async def _do_scrape(request: ScrapeRequest, is_auto: bool = False):
     global _scraping_status
     _scraping_status["running"] = True
     _scraping_status["error"] = None
@@ -67,12 +121,28 @@ async def _do_scrape(request: ScrapeRequest):
         db.save_jobs_bulk(all_jobs)
         _scraping_status["last_count"] = len(all_jobs)
         _scraping_status["dedup"] = dedup_stats(before, after)
-
-        from datetime import datetime
         _scraping_status["last_run"] = datetime.utcnow().isoformat()
+
+        if is_auto:
+            db.update_settings({"last_auto_run": _scraping_status["last_run"]})
+            print(f"[Scraper] Búsqueda AUTOMÁTICA completada: {after} ofertas")
 
     except Exception as e:
         _scraping_status["error"] = str(e)
         print(f"[Scraper] Error general: {e}")
     finally:
         _scraping_status["running"] = False
+
+
+async def run_auto_scrape():
+    """Ejecuta un scrape automático usando la configuración guardada. Llamado por el scheduler."""
+    settings = db.get_settings()
+    if not settings.get("auto_search_enabled"):
+        return
+    if _scraping_status["running"]:
+        return
+    req = ScrapeRequest(
+        portals=settings.get("portals", ["computrabajo", "getonboard", "chiletrabajos"]),
+        limit=settings.get("limit", 60),
+    )
+    await _do_scrape(req, is_auto=True)

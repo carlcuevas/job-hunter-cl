@@ -10,6 +10,7 @@ _root_dir    = os.path.abspath(os.path.join(_backend_dir, ".."))
 if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +18,25 @@ from fastapi.responses import FileResponse
 
 from routers import jobs, applications, scraper
 
-app = FastAPI(title="Job Hunter CL", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: iniciar el scheduler de búsqueda automática
+    try:
+        from scheduler import start_scheduler, shutdown_scheduler
+        start_scheduler()
+    except Exception as e:
+        print(f"[Startup] No se pudo iniciar el scheduler: {e}")
+    yield
+    # Shutdown
+    try:
+        from scheduler import shutdown_scheduler
+        shutdown_scheduler()
+    except Exception:
+        pass
+
+
+app = FastAPI(title="Job Hunter CL", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

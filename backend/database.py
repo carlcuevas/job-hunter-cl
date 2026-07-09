@@ -10,6 +10,17 @@ from datetime import datetime
 DB_DIR = os.path.join(os.path.dirname(__file__), "data")
 JOBS_FILE = os.path.join(DB_DIR, "jobs.json")
 APPLICATIONS_FILE = os.path.join(DB_DIR, "applications.json")
+SETTINGS_FILE = os.path.join(DB_DIR, "settings.json")
+
+# Configuración por defecto de la búsqueda automática
+DEFAULT_SETTINGS = {
+    "auto_search_enabled": False,
+    "search_hour": 8,          # hora del día (0-23), zona horaria de Chile
+    "search_minute": 0,
+    "portals": ["computrabajo", "getonboard", "chiletrabajos"],
+    "limit": 60,
+    "last_auto_run": None,
+}
 
 
 def _ensure_db():
@@ -151,3 +162,28 @@ def get_stats() -> Dict:
             sum(j.get("match_score", 0) for j in jobs) / len(jobs), 1
         ) if jobs else 0,
     }
+
+
+
+# ── SETTINGS (configuración de búsqueda automática) ────────────────────────────
+
+def get_settings() -> Dict:
+    _ensure_db()
+    if not os.path.exists(SETTINGS_FILE):
+        _write(SETTINGS_FILE, DEFAULT_SETTINGS)
+        return dict(DEFAULT_SETTINGS)
+    data = _read(SETTINGS_FILE)
+    # Rellenar claves faltantes con defaults
+    merged = dict(DEFAULT_SETTINGS)
+    merged.update(data or {})
+    return merged
+
+
+def update_settings(updates: Dict) -> Dict:
+    _ensure_db()
+    settings = get_settings()
+    for k, v in updates.items():
+        if k in DEFAULT_SETTINGS or k == "last_auto_run":
+            settings[k] = v
+    _write(SETTINGS_FILE, settings)
+    return settings

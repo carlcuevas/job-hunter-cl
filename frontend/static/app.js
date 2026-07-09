@@ -12,7 +12,12 @@ window.addEventListener("DOMContentLoaded", () => {
   loadJobs();
   loadApplications();
   checkScrapeStatus();
+  populateTimeSelects();
+  loadScheduleBadge();
 });
+
+// Flag para no guardar mientras se cargan los valores iniciales
+let scheduleLoading = false;
 
 // ── Navigation ──────────────────────────────────────────────────
 function showPage(name) {
@@ -24,6 +29,7 @@ function showPage(name) {
   if (name === "jobs") loadJobs();
   if (name === "applications") loadApplications();
   if (name === "dashboard") { loadStats(); loadTopJobs(); }
+  if (name === "auto") loadSchedule();
 }
 
 // ── Stats ───────────────────────────────────────────────────────
@@ -423,6 +429,125 @@ async function updateAppStatus(appId, newStatus, el) {
   await patch(`/api/applications/${appId}`, { status: newStatus });
   showToast("Estado actualizado", "success");
   loadStats();
+}
+
+// ── Búsqueda Automática (Scheduler) ──────────────────────────────
+function populateTimeSelects() {
+  const hourSel = document.getElementById("auto-hour");
+  const minSel = document.getElementById("auto-minute");
+  if (hourSel && !hourSel.options.length) {
+    for (let h = 0; h < 24; h++) {
+      const o = document.createElement("option");
+      o.value = h;
+      o.textContent = String(h).padStart(2, "0");
+      hourSel.appendChild(o);
+    }
+  }
+  if (minSel && !minSel.options.length) {
+    for (const m of [0, 15, 30, 45]) {
+      const o = document.createElement("option");
+      o.value = m;
+      o.textContent = String(m).padStart(2, "0");
+      minSel.appendChild(o);
+    }
+  }
+}
+
+async function loadScheduleBadge() {
+  try {
+    const s = await get("/api/scraper/schedule");
+    const badge = document.getElementById("badge-auto");
+    if (badge) badge.style.display = s.auto_search_enabled ? "inline" : "none";
+  } catch (e) { /* silencioso */ }
+}
+
+async function loadSchedule() {
+  try {
+    scheduleLoading = true;
+    const s = await get("/api/scraper/schedule");
+
+    document.getElementById("auto-enabled").checked = !!s.auto_search_enabled;
+    document.getElementById("auto-hour").value = s.search_hour ?? 8;
+    document.getElementById("auto-minute").value = s.search_minute ?? 0;
+
+    const portals = s.portals || [];
+    ["computrabajo", "getonboard", "chiletrabajos"].forEach(p => {
+      const el = document.getElementById(`p-${p}`);
+      if (el) el.checked = portals.includes(p);
+    });
+
+    document.getElementById("next-run").textContent = formatDateTime(s.next_run) || "No programada";
+    document.getElementById("last-auto-run").textContent = formatDateTime(s.last_auto_run) || "Nunca";
+
+    toggleAutoSettings(s.auto_search_enabled);
+    const badge = document.getElementById("badge-auto");
+    if (badge) badge.style.display = s.auto_search_enabled ? "inline" : "none";
+
+    // URL de cron con el host actual
+    const cronEl = document.getElementById("cron-url-text");
+    if (cronEl) cronEl.textContent = `${window.location.origin}/api/scraper/cron`;
+  } catch (e) {
+    console.error("loadSchedule error:", e);
+  } finally {
+    scheduleLoading = false;
+  }
+}
+
+function toggleAutoSettings(enabled) {
+  const box = document.getElementById("auto-settings");
+  if (box) box.style.opacity = enabled ? "1" : "0.45";
+}
+
+async function saveSchedule() {
+  if (scheduleLoading) return;
+
+  const enabled = document.getElementById("auto-enabled").checked;
+  const hour = parseInt(document.getElementById("auto-hour").value);
+  const minute = parseInt(document.getElementById("auto-minute").value);
+  const portals = ["computrabajo", "getonboard", "chiletrabajos"]
+    .filter(p => document.getElementById(`p-${p}`)?.checked);
+
+  toggleAutoSettings(enabled);
+
+  try {
+    const res = await post("/api/scraper/schedule", {
+      auto_search_enabled: enabled,
+      search_hour: hour,
+      search_minute: minute,
+      portals: portals,
+    });
+    const s = res.settings || {};
+    // recargar next_run actualizado
+    const fresh = await get("/api/scraper/schedule");
+    document.getElementById("next-run").textContent = formatDateTime(fresh.next_run) || "No programada";
+
+    const badge = document.getElementById("badge-auto");
+    if (badge) badge.style.display = enabled ? "inline" : "none";
+
+    showToast(enabled ? `⏰ Búsqueda automática activada a las ${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}` : "Búsqueda automática desactivada", enabled ? "success" : "info");
+  } catch (e) {
+    showToast("Error al guardar configuración", "error");
+  }
+}
+
+function copyCronUrl() {
+  const txt = document.getElementById("cron-url-text").textContent;
+  navigator.clipboard.writeText(txt).then(
+    () => showToast("📋 URL copiada al portapapeles", "success"),
+    () => showToast("No se pudo copiar", "error")
+  );
+}
+
+function formatDateTime(iso) {
+  if (!iso) return null;
+  try {
+    const d = new Date(iso);
+    if (isNaN(d)) return null;
+    return d.toLocaleString("es-CL", {
+      weekday: "short", day: "numeric", month: "short",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch (e) { return null; }
 }
 
 // ── HTTP Helpers ─────────────────────────────────────────────────
