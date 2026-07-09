@@ -17,7 +17,7 @@ DEFAULT_SETTINGS = {
     "auto_search_enabled": False,
     "search_hour": 8,          # hora del día (0-23), zona horaria de Chile
     "search_minute": 0,
-    "portals": ["computrabajo", "getonboard", "chiletrabajos"],
+    "portals": ["computrabajo", "chiletrabajos", "ats"],
     "limit": 60,
     "last_auto_run": None,
 }

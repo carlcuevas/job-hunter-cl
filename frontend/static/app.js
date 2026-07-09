@@ -131,6 +131,7 @@ function sourceInfo(source) {
     chiletrabajos: { cls: "source-ct",  name: "ChileTrabajos" },
     computrabajo:  { cls: "source-cot", name: "Computrabajo" },
     getonboard:    { cls: "source-gob", name: "Get on Board" },
+    ats:           { cls: "source-ats", name: "Multinacional" },
   };
   return map[source] || { cls: "source-gob", name: source || "Portal" };
 }
@@ -331,7 +332,7 @@ async function runScraper() {
 
   try {
     await post("/api/scraper/run", {
-      portals: ["getonboard", "chiletrabajos", "computrabajo"],
+      portals: ["chiletrabajos", "computrabajo"],
       limit: 60,
     });
     pollScrapeStatus();
@@ -471,7 +472,7 @@ async function loadSchedule() {
     document.getElementById("auto-minute").value = s.search_minute ?? 0;
 
     const portals = s.portals || [];
-    ["computrabajo", "getonboard", "chiletrabajos"].forEach(p => {
+    ["computrabajo", "chiletrabajos", "ats"].forEach(p => {
       const el = document.getElementById(`p-${p}`);
       if (el) el.checked = portals.includes(p);
     });
@@ -504,7 +505,7 @@ async function saveSchedule() {
   const enabled = document.getElementById("auto-enabled").checked;
   const hour = parseInt(document.getElementById("auto-hour").value);
   const minute = parseInt(document.getElementById("auto-minute").value);
-  const portals = ["computrabajo", "getonboard", "chiletrabajos"]
+  const portals = ["computrabajo", "chiletrabajos", "ats"]
     .filter(p => document.getElementById(`p-${p}`)?.checked);
 
   toggleAutoSettings(enabled);

@@ -55,8 +55,8 @@
         <p class="subtitle" id="last-scrape-info">Buscá ofertas para empezar 👆</p>
         <div class="portals-legend">
           <span class="portal-chip source-cot">Computrabajo</span>
-          <span class="portal-chip source-gob">Get on Board</span>
           <span class="portal-chip source-ct">ChileTrabajos</span>
+          <span class="portal-chip source-ats">Multinacionales</span>
         </div>
       </div>
 
@@ -91,9 +91,9 @@
           <input type="text" id="search-input" placeholder="🔍 Buscar título, empresa..." oninput="filterJobs()" />
           <select id="filter-source" onchange="filterJobs()">
             <option value="">Todos los portales</option>
-            <option value="getonboard">Get on Board</option>
-            <option value="chiletrabajos">Chiletrabajos</option>
             <option value="computrabajo">Computrabajo</option>
+            <option value="chiletrabajos">Chiletrabajos</option>
+            <option value="ats">Multinacionales (ATS)</option>
           </select>
           <select id="filter-status" onchange="filterJobs()">
             <option value="">Todos los estados</option>
@@ -159,8 +159,8 @@
             <label>🌐 Portales a buscar</label>
             <div class="portal-checks">
               <label class="portal-check"><input type="checkbox" id="p-computrabajo" value="computrabajo" onchange="saveSchedule()" checked /> Computrabajo</label>
-              <label class="portal-check"><input type="checkbox" id="p-getonboard" value="getonboard" onchange="saveSchedule()" checked /> Get on Board</label>
               <label class="portal-check"><input type="checkbox" id="p-chiletrabajos" value="chiletrabajos" onchange="saveSchedule()" checked /> ChileTrabajos</label>
+              <label class="portal-check"><input type="checkbox" id="p-ats" value="ats" onchange="saveSchedule()" checked /> Multinacionales (ATS)</label>
             </div>
           </div>
 

@@ -28,7 +28,7 @@ class Job(BaseModel):
     salary: Optional[str] = None
     description: str
     url: str
-    source: str  # "laborum" | "getonboard" | "indeed"
+    source: str  # "computrabajo" | "chiletrabajos" | "ats"
     posted_at: Optional[str] = None
     scraped_at: datetime
     match_score: int = 0          # 0-100
@@ -64,6 +64,6 @@ class ApplicationUpdate(BaseModel):
 
 
 class ScrapeRequest(BaseModel):
-    portals: List[str] = ["laborum", "getonboard"]
+    portals: List[str] = ["computrabajo", "chiletrabajos", "ats"]
     keywords: Optional[List[str]] = None
-    limit: int = 50
+    limit: int = 60

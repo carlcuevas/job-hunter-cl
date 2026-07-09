@@ -70,7 +70,7 @@ async def cron_trigger(background_tasks: BackgroundTasks):
         return {"message": "Ya hay un scrape en curso", "ran": False}
 
     req = ScrapeRequest(
-        portals=settings.get("portals", ["computrabajo", "getonboard", "chiletrabajos"]),
+        portals=settings.get("portals", ["computrabajo", "chiletrabajos", "ats"]),
         limit=settings.get("limit", 60),
     )
     background_tasks.add_task(_do_scrape, req, True)
@@ -91,10 +91,6 @@ async def _do_scrape(request: ScrapeRequest, is_auto: bool = False):
             from scrapers.laborum import scrape as scrape_laborum
             tasks.append(scrape_laborum(limit=request.limit, keywords=request.keywords))
 
-        if "getonboard" in request.portals:
-            from scrapers.getonboard import scrape as scrape_getonboard
-            tasks.append(scrape_getonboard(limit=request.limit, keywords=request.keywords))
-
         if "chiletrabajos" in request.portals:
             from scrapers.chiletrabajos import scrape as scrape_chiletrabajos
             tasks.append(scrape_chiletrabajos(limit=request.limit, keywords=request.keywords))
@@ -102,6 +98,10 @@ async def _do_scrape(request: ScrapeRequest, is_auto: bool = False):
         if "computrabajo" in request.portals:
             from scrapers.computrabajo import scrape as scrape_computrabajo
             tasks.append(scrape_computrabajo(limit=request.limit, keywords=request.keywords))
+
+        if "ats" in request.portals:
+            from scrapers.ats import scrape as scrape_ats
+            tasks.append(scrape_ats(limit=request.limit, keywords=request.keywords))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -142,7 +142,7 @@ async def run_auto_scrape():
     if _scraping_status["running"]:
         return
     req = ScrapeRequest(
-        portals=settings.get("portals", ["computrabajo", "getonboard", "chiletrabajos"]),
+        portals=settings.get("portals", ["computrabajo", "chiletrabajos", "ats"]),
         limit=settings.get("limit", 60),
     )
     await _do_scrape(req, is_auto=True)
