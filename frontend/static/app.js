@@ -46,7 +46,8 @@ async function loadTopJobs() {
   const container = document.getElementById("top-jobs-list");
   try {
     const data = await get("/api/jobs/?min_score=50");
-    const top = (data.jobs || []).filter(j => j.status !== "descartada").slice(0, 6);
+    // Excluir descartadas Y postuladas del dashboard
+    const top = (data.jobs || []).filter(j => j.status !== "descartada" && j.status !== "postulada").slice(0, 6);
 
     if (!top.length) {
       container.innerHTML = `<div class="empty-state">
@@ -78,15 +79,21 @@ async function loadJobs() {
 }
 
 function buildFilterParams() {
-  const search = document.getElementById("search-input")?.value || "";
-  const source = document.getElementById("filter-source")?.value || "";
-  const status = document.getElementById("filter-status")?.value || "";
-  const score = document.getElementById("filter-score")?.value || "0";
+  const search      = document.getElementById("search-input")?.value || "";
+  const source      = document.getElementById("filter-source")?.value || "";
+  const status      = document.getElementById("filter-status")?.value || "";
+  const score       = document.getElementById("filter-score")?.value || "0";
+  const hideApplied = document.getElementById("hide-applied")?.checked ?? true;
 
   const params = new URLSearchParams();
   if (search) params.set("search", search);
   if (source) params.set("source", source);
-  if (status) params.set("status", status);
+  // Si hay status explícito úsalo; si no y hide-applied está activo, excluir postuladas
+  if (status) {
+    params.set("status", status);
+  } else if (hideApplied) {
+    params.set("exclude_status", "postulada");
+  }
   if (parseInt(score) > 0) params.set("min_score", score);
   return params.toString();
 }

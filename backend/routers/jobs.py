@@ -11,6 +11,7 @@ async def list_jobs(
     source: Optional[str] = None,
     min_score: Optional[int] = 0,
     status: Optional[str] = None,
+    exclude_status: Optional[str] = None,
     search: Optional[str] = None,
 ):
     """Lista todas las ofertas con filtros opcionales."""
@@ -22,6 +23,8 @@ async def list_jobs(
         jobs = [j for j in jobs if j.get("match_score", 0) >= min_score]
     if status:
         jobs = [j for j in jobs if j.get("status") == status]
+    elif exclude_status:
+        jobs = [j for j in jobs if j.get("status") != exclude_status]
     if search:
         q = search.lower()
         jobs = [j for j in jobs if q in j.get("title", "").lower()
@@ -93,20 +96,30 @@ def _pick_experience_template(job: dict) -> str:
     """Selecciona el template de experiencia según las keywords del trabajo."""
     text = (job.get("title", "") + " " + job.get("description", "")).lower()
 
-    ti_keywords = ["soporte", "helpdesk", "help desk", "it ", "ti ", "infraestructura",
-                   "técnico", "aws", "cloud", "redes", "hardware", "software", "sistemas"]
-    rrhh_keywords = ["rrhh", "recursos humanos", "administración de personal",
-                     "remuneraciones", "gestión de personas", "sap"]
-    cs_keywords = ["atención al cliente", "customer", "ventas", "servicio al cliente",
-                   "call center", "soporte cliente", "barista", "cafetería"]
+    ti_keywords      = ["soporte", "helpdesk", "help desk", "it ", "ti ", "infraestructura",
+                        "técnico", "aws", "cloud", "redes", "hardware", "software", "sistemas"]
+    rrhh_keywords    = ["rrhh", "recursos humanos", "administración de personal",
+                        "remuneraciones", "gestión de personas", "sap"]
+    barista_keywords = ["barista", "espresso", "latte", "cappuccino", "cold brew",
+                        "filtrado", "cafetería", "café de especialidad", "barra", "molino"]
+    garzon_keywords  = ["garzón", "garzon", "mesero", "servicio de mesa", "restaurante",
+                        "restaurant", "ayudante de cocina", "mozo", "salón"]
+    cs_keywords      = ["atención al cliente", "customer", "ventas", "servicio al cliente",
+                        "call center", "soporte cliente"]
 
-    ti_score   = sum(1 for k in ti_keywords   if k in text)
-    rrhh_score = sum(1 for k in rrhh_keywords if k in text)
-    cs_score   = sum(1 for k in cs_keywords   if k in text)
+    ti_score      = sum(1 for k in ti_keywords      if k in text)
+    rrhh_score    = sum(1 for k in rrhh_keywords    if k in text)
+    barista_score = sum(1 for k in barista_keywords if k in text)
+    garzon_score  = sum(1 for k in garzon_keywords  if k in text)
+    cs_score      = sum(1 for k in cs_keywords      if k in text)
 
-    best = max(ti_score, rrhh_score, cs_score)
+    best = max(ti_score, rrhh_score, barista_score, garzon_score, cs_score)
     if best == 0:
         return PROFILE["gob_experience_templates"]["default"]
+    if best == barista_score:
+        return PROFILE["gob_experience_templates"]["barista"]
+    if best == garzon_score:
+        return PROFILE["gob_experience_templates"]["garzon"]
     if best == ti_score:
         return PROFILE["gob_experience_templates"]["ti"]
     if best == rrhh_score:

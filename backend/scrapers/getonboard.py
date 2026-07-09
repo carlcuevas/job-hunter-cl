@@ -25,6 +25,9 @@ SEARCH_TAGS = [
     "infraestructura",
     "aws",
     "it",
+    "barista",
+    "gastronomia",
+    "cafeteria",
 ]
 
 
@@ -57,7 +60,7 @@ async def _search_getonboard(client: httpx.AsyncClient, limit: int) -> List[Dict
 
     # API pública de Get on Board: GET /api/v0/search/jobs
     params = {
-        "q": "soporte TI atención cliente",
+        "q": "soporte TI atención cliente barista garzón cafetería",
         "country_code": "CL",
         "per_page": min(limit, 25),
         "page": 1,
@@ -175,6 +178,28 @@ def _get_mock_jobs() -> List[Dict]:
             "description": "Administración de personal, manejo SAP HR, control asistencia y remuneraciones. Estudiante o titulado en área admin o RRHH.",
             "url": "https://www.getonbrd.com/jobs/demo-rrhh",
             "posted_at": "2026-07-06",
+        },
+        {
+            "id": "gob_mock_004",
+            "title": "Barista de Especialidad",
+            "company": "Café Boutique Santiago",
+            "location": "Santiago, Chile",
+            "modality": "Presencial",
+            "salary": "$500.000 - $650.000",
+            "description": "Buscamos barista con experiencia en espresso, latte art, métodos de filtrado y cold brew. Atención al cliente, trabajo en equipo y pasión por el café.",
+            "url": "https://www.getonbrd.com/jobs/demo-barista",
+            "posted_at": "2026-07-09",
+        },
+        {
+            "id": "gob_mock_005",
+            "title": "Garzón / Garzona de Salón",
+            "company": "Restaurante Las Condes",
+            "location": "Las Condes, Santiago",
+            "modality": "Presencial",
+            "salary": "$480.000 - $600.000 + propinas",
+            "description": "Se busca garzón con experiencia en servicio de salón, atención al cliente y trabajo en equipo. Alto volumen. Disponibilidad fines de semana.",
+            "url": "https://www.getonbrd.com/jobs/demo-garzon",
+            "posted_at": "2026-07-09",
         },
     ]
 

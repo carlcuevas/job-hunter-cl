@@ -32,6 +32,8 @@ SEARCH_SLUGS = [
     "asistente-administrativo",
     "recursos-humanos",
     "barista",
+    "garzon",
+    "cafetera",
     "soporte-tecnico",
 ]
 
@@ -245,6 +247,36 @@ def _get_mock_jobs() -> List[Dict]:
             "url": "https://www.chiletrabajos.cl/trabajos/asistente-administrativo-en-santiago",
             "posted_at": "Hace 2 días",
         },
+        {
+            "title": "Barista / Encargado de Cafetería",
+            "company": "Cafetería Especialidad",
+            "location": "Providencia, Santiago",
+            "modality": "Presencial",
+            "salary": "$500.000 - $650.000",
+            "description": "Buscamos barista con manejo de espresso, cappuccino, latte art, cold brew y métodos de filtrado. Experiencia en calibración de molino y máquina espresso. Alto volumen y atención al cliente.",
+            "url": "https://www.chiletrabajos.cl/trabajos/barista-en-santiago",
+            "posted_at": "Hoy",
+        },
+        {
+            "title": "Garzón / Garzona",
+            "company": "Restaurante Santiago Centro",
+            "location": "Santiago Centro",
+            "modality": "Presencial",
+            "salary": "$450.000 - $580.000 + propinas",
+            "description": "Se necesita garzón con experiencia en servicio de mesa, atención al cliente, trabajo en equipo y manejo de caja. Disponibilidad fines de semana y turnos rotativos.",
+            "url": "https://www.chiletrabajos.cl/trabajos/garzon-en-santiago",
+            "posted_at": "Hoy",
+        },
+        {
+            "title": "Garzón Café / Ayudante de Barra",
+            "company": "Cadena de Cafeterías",
+            "location": "Las Condes, Santiago",
+            "modality": "Presencial",
+            "salary": "$480.000 - $600.000",
+            "description": "Servicio de café y atención en barra. Manejo de máquina espresso básico, caja y atención al cliente con alto estándar de servicio. Capacitación incluida.",
+            "url": "https://www.chiletrabajos.cl/trabajos/garzon-cafe-en-santiago",
+            "posted_at": "Ayer",
+        },
     ]
     results = []
     for m in mocks:
@@ -264,6 +296,14 @@ def _get_mock_jobs() -> List[Dict]:
 
 
 def _get_mock_jobs_for_slug(slug: str) -> List[Dict]:
-    """Retorna mocks filtrados por el slug dado."""
+    """Retorna mocks relevantes según el slug."""
     all_mocks = _get_mock_jobs()
-    return [m for m in all_mocks if any(word in slug for word in ["soporte", "ti", "tecnico"])] or all_mocks[:1]
+    if any(word in slug for word in ["barista", "cafe", "cafeteria"]):
+        return [m for m in all_mocks if any(w in m["title"].lower() for w in ["barista", "café", "barra"])]
+    if any(word in slug for word in ["garzon", "gastronomia", "restaurant"]):
+        return [m for m in all_mocks if any(w in m["title"].lower() for w in ["garzón", "garzon", "barra"])]
+    if any(word in slug for word in ["soporte", "ti", "tecnico", "help"]):
+        return [m for m in all_mocks if any(w in m["title"].lower() for w in ["soporte", "técnico", "ti"])]
+    if any(word in slug for word in ["atencion", "cliente", "customer"]):
+        return [m for m in all_mocks if "cliente" in m["title"].lower() or "atención" in m["description"].lower()]
+    return all_mocks[:2]

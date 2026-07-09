@@ -28,12 +28,16 @@ PROFILE = {
         "soporte TI", "help desk", "soporte técnico", "AWS", "SAP", "infraestructura",
         "cloud", "redes", "hardware", "atención al cliente", "customer success",
         "customer service", "RRHH", "recursos humanos", "ERP", "excel", "modelado",
-        "base de datos", "barista", "cafetería", "liderazgo", "capacitación", "onboarding",
+        "base de datos", "barista", "cafetería", "café", "latte art", "espresso",
+        "cappuccino", "cold brew", "filtrado", "calibración", "garzón", "garzon",
+        "servicio de mesa", "barra", "gastronomía", "restaurant", "liderazgo",
+        "capacitación", "onboarding",
     ],
 
     "keywords_medium": [
         "técnico", "administrativo", "gestión", "KPIs", "freelance", "emprendimiento",
         "operaciones", "ventas", "backoffice", "coordinador", "encargado",
+        "cocina", "turno", "caja", "propinas", "hostelería",
     ],
 
     "keywords_low": [
@@ -82,6 +86,14 @@ Tengo disponibilidad inmediata, full time, y me manejo bien bajo presión manten
         "rrhh": """Cuento con título de Técnico en Administración de RRHH (CFT Estatal RM, 2024) y experiencia práctica en el área a través de mi práctica profesional en Arcos Dorados Chile (McDonald's), donde utilicé SAP ERP para gestión de asistencia, vacaciones y procesos de remuneraciones en entorno corporativo.
 
 Complementariamente, como Gerente de Turno lideré equipos, gestioné conflictos y participé en procesos de onboarding y capacitación de nuevos colaboradores. Manejo Excel avanzado, tengo buen trato con personas y disponibilidad inmediata.""",
+
+        "barista": """Cuento con más de 3 años de experiencia directa como Barista, con formación como Entrenador certificado en Arcos Dorados Chile (McDonald's — McCafé). Manejo espresso, cappuccino, latte art, cold brew, frappés y métodos de filtrado. Domino calibración de molino y máquina espresso, gestión de caja y atención en barra bajo alto volumen.
+
+Actualmente en Shukran Coffee (cafetería de especialidad) me desempeño con foco en experiencia personalizada y educación sobre café de origen. Ascendí a Gerente de Turno en McCafé, liderando equipos y manteniendo KPIs de satisfacción. Me adapto rápido a nuevos equipos y estándares de marca. Disponibilidad inmediata full time.""",
+
+        "garzon": """Cuento con experiencia en servicio al cliente en entornos de alto volumen y atención personalizada. Como Barista y Gerente de Turno en Arcos Dorados Chile (McDonald's — McCafé) desarrollé habilidades de servicio bajo presión, trabajo en equipo, manejo de caja y estándares de calidad en la atención.
+
+Actualmente en Shukran Coffee desarrollo el trato directo con clientes de exigente estándar. Soy ordenado, responsable, aprendo rápido y tengo disponibilidad para turnos rotativos y fines de semana. Disponibilidad inmediata.""",
 
         "default": """Soy un profesional versátil con más de 3 años de experiencia en atención al cliente, liderazgo de equipos y soporte TI. Formé como Entrenador Barista y Gerente de Turno en Arcos Dorados Chile (McDonald's — McCafé), donde gestioné equipos, KPIs y operación de turno completa.
 
