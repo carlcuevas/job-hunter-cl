@@ -61,10 +61,30 @@ def score_job(title: str, description: str, location: str = "", modality: str = 
 
     score += min(len(low_matches) * 1, 5)
 
-    # ── 5. Bonus por ubicación ─────────────────────────────────────────────
+    # ── 5. Bonus/penalización por ubicación (Carlos vive en Santiago) ──────
     loc = normalize(location + " " + modality)
-    if any(x in loc for x in ["santiago", "remoto", "remote", "hibrido", "teletrabajo"]):
+    is_remote = any(x in loc for x in ["remoto", "remote", "teletrabajo", "hibrido"])
+    is_metropolitana = any(x in loc for x in [
+        "santiago", "metropolit", "providencia", "las condes", "nunoa",
+        "maipu", "la florida", "puente alto", "vitacura", "recoleta",
+        "estacion central", "san bernardo", "quilicura",
+    ])
+
+    # Regiones lejanas — si es presencial fuera de RM, no le sirve a Carlos
+    otras_regiones = [
+        "antofagasta", "vina del mar", "valparaiso", "concepcion", "temuco",
+        "puerto varas", "puerto montt", "iquique", "arica", "la serena",
+        "rancagua", "talca", "chillan", "osorno", "calama", "copiapo",
+        "punta arenas", "coquimbo", "los angeles", "valdivia",
+    ]
+    is_otra_region = any(x in loc for x in otras_regiones)
+
+    if is_remote:
         score += 5
+    elif is_metropolitana:
+        score += 8
+    elif is_otra_region:
+        score -= 20  # presencial fuera de RM: poco útil
 
     # ── 6. Penalización si requiere experiencia muy alta ───────────────────
     if re.search(r"\b([5-9]|10|\d{2})\s*años", normalize(description)):

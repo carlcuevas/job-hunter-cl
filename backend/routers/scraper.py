@@ -45,6 +45,10 @@ async def _do_scrape(request: ScrapeRequest):
             from scrapers.chiletrabajos import scrape as scrape_chiletrabajos
             tasks.append(scrape_chiletrabajos(limit=request.limit, keywords=request.keywords))
 
+        if "computrabajo" in request.portals:
+            from scrapers.computrabajo import scrape as scrape_computrabajo
+            tasks.append(scrape_computrabajo(limit=request.limit, keywords=request.keywords))
+
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for result in results:

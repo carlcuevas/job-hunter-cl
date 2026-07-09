@@ -122,8 +122,8 @@ function renderJobs(jobs) {
 function jobCard(job) {
   const scoreColor = getScoreColor(job.match_score);
   const statusClass = { nueva: "", guardada: "saved", postulada: "applied", descartada: "discarded" }[job.status] || "";
-  const sourceClass = job.source === "laborum" ? "source-lab" : job.source === "chiletrabajos" ? "source-ct" : "source-gob";
-  const sourceName = job.source === "laborum" ? "Laborum" : job.source === "chiletrabajos" ? "ChileTrabajos" : "Get on Board";
+  const sourceClass = job.source === "laborum" ? "source-lab" : job.source === "chiletrabajos" ? "source-ct" : job.source === "computrabajo" ? "source-cot" : "source-gob";
+  const sourceName = job.source === "laborum" ? "Laborum" : job.source === "chiletrabajos" ? "ChileTrabajos" : job.source === "computrabajo" ? "Computrabajo" : "Get on Board";
   const tags = (job.match_tags || []).slice(0, 4).map(t => `<span class="match-tag">${t}</span>`).join("");
 
   return `
@@ -188,8 +188,8 @@ async function openJobModal(jobId) {
 function renderJobModal(job) {
   const scoreColor = getScoreColor(job.match_score);
   const tags = (job.match_tags || []).map(t => `<span class="match-tag">${esc(t)}</span>`).join("");
-  const sourceClass = job.source === "laborum" ? "source-lab" : job.source === "chiletrabajos" ? "source-ct" : "source-gob";
-  const sourceName = job.source === "laborum" ? "Laborum" : job.source === "chiletrabajos" ? "ChileTrabajos" : "Get on Board";
+  const sourceClass = job.source === "laborum" ? "source-lab" : job.source === "chiletrabajos" ? "source-ct" : job.source === "computrabajo" ? "source-cot" : "source-gob";
+  const sourceName = job.source === "laborum" ? "Laborum" : job.source === "chiletrabajos" ? "ChileTrabajos" : job.source === "computrabajo" ? "Computrabajo" : "Get on Board";
 
   return `
     <div class="modal-title">${esc(job.title)}</div>
@@ -305,8 +305,8 @@ async function runScraper() {
 
   try {
     await post("/api/scraper/run", {
-      portals: ["getonboard", "chiletrabajos"],
-      limit: 50,
+      portals: ["getonboard", "chiletrabajos", "computrabajo"],
+      limit: 60,
     });
     pollScrapeStatus();
   } catch (e) {
@@ -380,7 +380,7 @@ function appCard(app) {
       <div class="app-title">${esc(app.job_title)}</div>
       <div class="app-company">🏢 ${esc(app.company)}</div>
       <div class="app-date">
-        ${app.source === "laborum" ? "Laborum" : app.source === "chiletrabajos" ? "ChileTrabajos" : "Get on Board"} · Postulada el ${date}
+        ${app.source === "laborum" ? "Laborum" : app.source === "chiletrabajos" ? "ChileTrabajos" : app.source === "computrabajo" ? "Computrabajo" : "Get on Board"} · Postulada el ${date}
       </div>
     </div>
     <div>

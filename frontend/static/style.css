@@ -314,6 +314,7 @@ body {
 .tag.source-lab { border-color: #3b82f6; color: #3b82f6; }
 .tag.source-gob { border-color: #10b981; color: #10b981; }
 .tag.source-ct  { border-color: #f59e0b; color: #f59e0b; }
+.tag.source-cot { border-color: #ec4899; color: #ec4899; }
 .tag.modality { border-color: var(--accent); color: var(--accent2); }
 
 .job-description {
