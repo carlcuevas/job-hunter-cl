@@ -6,6 +6,17 @@ from profile import PROFILE
 router = APIRouter()
 
 
+def _is_remote(job: dict) -> bool:
+    """Detecta si una oferta es remota por modalidad, ubicación o texto."""
+    blob = " ".join([
+        str(job.get("modality") or ""),
+        str(job.get("location") or ""),
+        str(job.get("title") or ""),
+        str(job.get("description") or ""),
+    ]).lower()
+    return any(w in blob for w in ["remoto", "remote", "teletrabajo", "home office", "hibrido", "híbrido"])
+
+
 @router.get("/")
 async def list_jobs(
     source: Optional[str] = None,
@@ -13,6 +24,7 @@ async def list_jobs(
     status: Optional[str] = None,
     exclude_status: Optional[str] = None,
     search: Optional[str] = None,
+    remote_only: Optional[bool] = False,
 ):
     """Lista todas las ofertas con filtros opcionales."""
     jobs = db.get_all_jobs()
@@ -25,6 +37,8 @@ async def list_jobs(
         jobs = [j for j in jobs if j.get("status") == status]
     elif exclude_status:
         jobs = [j for j in jobs if j.get("status") != exclude_status]
+    if remote_only:
+        jobs = [j for j in jobs if _is_remote(j)]
     if search:
         q = search.lower()
         jobs = [j for j in jobs if q in j.get("title", "").lower()

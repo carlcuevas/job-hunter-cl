@@ -80,7 +80,7 @@ def score_job(title: str, description: str, location: str = "", modality: str = 
     is_otra_region = any(x in loc for x in otras_regiones)
 
     if is_remote:
-        score += 5
+        score += 18  # PRIORIDAD: trabajo remoto es lo más deseado
     elif is_metropolitana:
         score += 8
     elif is_otra_region:

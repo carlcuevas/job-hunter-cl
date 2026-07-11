@@ -30,25 +30,28 @@ HEADERS = {
 # Términos de búsqueda alineados al perfil de Carlos.
 # Computrabajo usa URLs tipo /trabajo-de-{termino-con-guiones}
 SEARCH_TERMS = [
+    # REMOTO / teletrabajo (prioridad — lo más deseado)
+    "teletrabajo",
+    "soporte-remoto",
+    "atencion-al-cliente-remoto",
+    "call-center-remoto",
+    # Soporte TI / tecnología (formación actual, alto potencial remoto)
+    "soporte-tecnico",
+    "help-desk",
+    "mesa-de-ayuda",
+    "soporte-ti",
+    # Atención al cliente / servicio
+    "atencion-al-cliente",
+    "call-center",
+    "ejecutivo-de-atencion",
     # Cafetería / servicio (experiencia principal de Carlos)
     "barista",
     "garzon",
     "cafeteria",
-    "atencion-al-cliente",
-    "encargado-de-local",
     "cajero",
-    # Soporte TI / tecnología (formación actual)
-    "soporte-tecnico",
-    "help-desk",
-    "mesa-de-ayuda",
-    "tecnico-en-computacion",
-    "soporte-ti",
-    "tecnico-de-soporte",
     # Administración / RRHH (título técnico)
     "asistente-administrativo",
     "recursos-humanos",
-    "call-center",
-    "ejecutivo-de-atencion",
 ]
 
 

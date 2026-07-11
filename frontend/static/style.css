@@ -380,6 +380,27 @@ body {
 .job-salary { font-size: 13px; font-weight: 600; color: var(--green); }
 .job-date { font-size: 11px; color: var(--text2); }
 
+.job-quick-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.quick-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  transition: all 0.15s;
+}
+.quick-applied { color: var(--green); border-color: rgba(34,197,94,0.4); }
+.quick-applied:hover { background: var(--green); color: white; }
+.quick-discard { color: var(--text2); }
+.quick-discard:hover { background: var(--red); color: white; border-color: var(--red); }
+
 .status-dot {
   width: 8px; height: 8px;
   border-radius: 50%;

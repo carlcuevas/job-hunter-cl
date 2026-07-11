@@ -90,6 +90,7 @@ function buildFilterParams() {
   const status      = document.getElementById("filter-status")?.value || "";
   const score       = document.getElementById("filter-score")?.value || "0";
   const hideApplied = document.getElementById("hide-applied")?.checked ?? true;
+  const remoteOnly  = document.getElementById("remote-only")?.checked ?? false;
 
   const params = new URLSearchParams();
   if (search) params.set("search", search);
@@ -101,6 +102,7 @@ function buildFilterParams() {
     params.set("exclude_status", "postulada");
   }
   if (parseInt(score) > 0) params.set("min_score", score);
+  if (remoteOnly) params.set("remote_only", "true");
   return params.toString();
 }
 
@@ -170,7 +172,40 @@ function jobCard(job) {
         ${statusLabel(job.status)} ${job.posted_at ? "· " + esc(job.posted_at) : ""}
       </span>
     </div>
+    <div class="job-quick-actions">
+      <button class="quick-btn quick-applied" onclick="markAppliedQuick(event, '${job.id}')">✓ Ya postulé</button>
+      <button class="quick-btn quick-discard" onclick="discardJobQuick(event, '${job.id}')">✕ Descartar</button>
+    </div>
   </div>`;
+}
+
+// Marcar como postulada directamente desde la card (sin abrir el modal)
+async function markAppliedQuick(event, jobId) {
+  event.stopPropagation();
+  try {
+    await post("/api/applications/", { job_id: jobId, cover_letter: "" });
+    await patch(`/api/jobs/${jobId}/status`, { status: "postulada" });
+    showToast("✅ Marcada como postulada — no volverá a aparecer", "success");
+    loadJobs();
+    loadTopJobs();
+    loadStats();
+  } catch (e) {
+    showToast("Error al marcar como postulada", "error");
+  }
+}
+
+// Descartar directamente desde la card
+async function discardJobQuick(event, jobId) {
+  event.stopPropagation();
+  try {
+    await patch(`/api/jobs/${jobId}/status`, { status: "descartada" });
+    showToast("✕ Oferta descartada", "info");
+    loadJobs();
+    loadTopJobs();
+    loadStats();
+  } catch (e) {
+    showToast("Error al descartar", "error");
+  }
 }
 
 // ── Job Modal ───────────────────────────────────────────────────
@@ -332,7 +367,7 @@ async function runScraper() {
 
   try {
     await post("/api/scraper/run", {
-      portals: ["chiletrabajos", "computrabajo"],
+      portals: ["computrabajo", "chiletrabajos", "ats"],
       limit: 60,
     });
     pollScrapeStatus();
