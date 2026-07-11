@@ -111,6 +111,13 @@ async def _do_scrape(request: ScrapeRequest, is_auto: bool = False):
             elif isinstance(result, Exception):
                 print(f"[Scraper] Error en portal: {result}")
 
+        # Descartar ofertas irrelevantes (sin match de rol → score muy bajo)
+        RELEVANCE_THRESHOLD = 12
+        relevant = [j for j in all_jobs if j.get("match_score", 0) >= RELEVANCE_THRESHOLD]
+        discarded_irrelevant = len(all_jobs) - len(relevant)
+        all_jobs = relevant
+        print(f"[Scraper] Filtradas {discarded_irrelevant} ofertas irrelevantes (score < {RELEVANCE_THRESHOLD})")
+
         # Deduplicar ofertas repetidas entre portales
         from dedup import deduplicate, dedup_stats
         before = len(all_jobs)
